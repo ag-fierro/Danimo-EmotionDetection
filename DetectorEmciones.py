@@ -107,6 +107,7 @@ def update_frame():
     frame_count += 1
       
     frame = cv2.flip(frame, 1)  # espejo
+    frame = cv2.resize(frame, ( label.winfo_width(),label.winfo_height() ) )
     
     #### CODIGO INTERNO
 
@@ -169,7 +170,7 @@ for emotion, file in EMOTION_SPRITES.items():
 ### VENTANA TKINTER ###
 
 root = tk.Tk()
-root.title("Emoji Emotion Detector")
+root.title("DANIMO - DETECCIÓN DE EMOCIONES")
 root.geometry(f"{ANCHO_VENTANA}x{ALTO_VENTANA}")
 
 # === Cargar imagen de fondo ===
@@ -184,9 +185,9 @@ label_fondo.place(x=0, y=0, relwidth=1, relheight=1)
 # === Frame que contendrá el stream de video (encima del fondo) ===
 frame_display = tk.Frame(root, bg="black")
 frame_display.pack(expand=True, fill='both')
-frame_display.place(relx=0.5, rely=0.4, anchor="center")  # centrado
+frame_display.place(relx=0.5, rely=0.43, anchor="center")  # centrado
 
-label = tk.Label(frame_display,bg="red")
+label = tk.Label(frame_display)
 label.pack()
 
 
