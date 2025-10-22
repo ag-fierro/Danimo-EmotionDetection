@@ -48,11 +48,12 @@ WEIGHTS = {
 
 REGLAS_TEXT = [
         "Reglas del juego:",
-        "- Si dice 'DANI dice', intenta mostrar esa emocion.",
-        "- Si NO dice 'DANI dice', no lo hagas",
-        "- Si fallas, vuelves al nivel 1.",
-        "- Si aciertas, subes de nivel.",
-        "- La camara debe captar tu rostro",
+        "- Si 'DANI dice' algo, intenta mostrar esa emocion.",
+        "- Si DANI no dice nada, no lo hagas",
+        "",
+        "- Si te equivocas, volves al nivel 1.",
+        "",
+        "- Asegurate que la camara detecta tu rostro correctamente.",
         "",
         "",
         "Selecciona la dificultad y el juego comenzara:",
