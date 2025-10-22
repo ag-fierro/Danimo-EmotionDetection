@@ -16,7 +16,7 @@ IMG_PATH = "src/img/"
 FD_THRESHOLD = 0.7  # umbral de confianza para detección facial
 DS_THRESHOLD = 0.7  # probabilidad de que "DANI diga"
 
-FRAME_INTERVAL = 10  # analizar 1 de cada X frames
+FRAME_INTERVAL = 7  # analizar 1 de cada X frames
 
 ANCHO_VENTANA = 1600
 ALTO_VENTANA = 900
@@ -164,35 +164,23 @@ def update_frame():
     
     if (dani_dice):
         if time.time() - start_time > TIME_TO_RESPOND:
-            print(" ")
-            #add_output(" Tiempo agotado. Reiniciando juego.")
-            cv2.putText(frame, f"Tiempo agotado. Reiniciando juego.", (10, 110),
-                cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
-            sleep(SLEEP_TIME)
+            print("Tiempo agotado. Reiniciando juego.")
+            label_res.config(text=f"Tiempo agotado.\nReiniciando juego. \nNivel Alcanzado : {level}")
             level = 1
             
         elif detected == current_emotion:
             print("Correcto!")
-            
-            cv2.putText(frame, f"Correcto!", (10, 110),
-                cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
-            #add_output("Correcto!")
-            sleep(SLEEP_TIME)
+            label_res.config(text=f"Correcto!")
             level += 1
     else:
         if time.time() - start_time > TIME_TO_RESPOND:
             print("Correcto!")
-            cv2.putText(frame, f"Correcto!", (10, 110),
-                cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
-            sleep(SLEEP_TIME)
-            #add_output("Correcto!")
+            label_res.config(text=f"Correcto!")
             level += 1
         elif detected == current_emotion:
             print(" Simon No LO DIJO. Reiniciando juego.")
-            cv2.putText(frame, f"Simon No LO DIJO. Reiniciando juego.", (10, 110),
-                cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
+            label_res.config(text=f"Simon No LO DIJO.\nReiniciando juego.\nNivel Alcanzado : {level}")
             sleep(SLEEP_TIME)
-            #add_output(" Simon No LO DIJO. Reiniciando juego.")
             level = 1
             
     if (change_emotion):
@@ -210,7 +198,7 @@ def update_frame():
     # Llamar de nuevo después de 10ms
     root.after(10, update_frame)
 
-# === Función para redimensionar fondo al cambiar tamaño ===
+# === Función para redimensionar al cambiar tamaño ===
 def actualizar_fondo(event):
     global ancho_video, alto_video
     
@@ -302,7 +290,6 @@ print(f"Tiempo para responder: {TIME_TO_RESPOND} segundos")
 cap = cv2.VideoCapture(0)
 
 frame_count = 0 
-
 last_emotions = []  # almacena emociones detectadas la ultima vez
 
 
@@ -311,6 +298,8 @@ for emotion, file in EMOTION_SPRITES.items():
     path = os.path.join(IMG_PATH, file)
     if os.path.exists(path):
         loaded_emojis[emotion] = cv2.imread(path, cv2.IMREAD_UNCHANGED)  # con canal alpha
+        
+## INICIALIZACION VARIABLES JUEGO ###
         
 current_emotion, dani_dice = new_emotion(DS_THRESHOLD)
 detected = 'none'
@@ -334,6 +323,7 @@ label_fondo = tk.Label(root)
 label_fondo.place(x=0, y=0, relwidth=1, relheight=1)
 
 
+# === Texto de contadores (encima del fondo) ===
 texto = f"Tiempo restante: {TIME_TO_RESPOND}s  Nivel: {level} \n "" \n Emocion detectada: {current_emotion} "
 label_text = tk.Label(
     label_fondo, 
@@ -342,8 +332,18 @@ label_text = tk.Label(
     fg="black",       # color de la letra
     justify="center"  # centrar texto si tiene varias líneas
 )
-label_text.place(relx=0.5, rely=0.08, anchor="n")  # parte superior centrado
+label_text.place(relx=0.5, rely=0.08, anchor="n") 
 
+texto_res = f""
+
+label_res = tk.Label(
+    label_fondo, 
+    text=texto_res, 
+    font=("Arial", 16), 
+    fg="black",       # color de la letra
+    justify="center"  # centrar texto si tiene varias líneas
+)
+label_res.place(relx=0.9, rely=0.5, anchor="e")
 
 
 # === Frame que contendrá el stream de video (encima del fondo) ===
