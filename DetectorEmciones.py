@@ -1,6 +1,8 @@
 import os
+import random
 import cv2
 from deepface import DeepFace
+import numpy as np
 
 import tkinter as tk
 from PIL import Image, ImageTk
@@ -8,12 +10,16 @@ from PIL import Image, ImageTk
 IMG_PATH = "src/img/"
 
 FD_THRESHOLD = 0.7  # umbral de confianza para detección facial
-FRAME_INTERVAL = 7  # analizar 1 de cada X frames
+DS_THRESHOLD = 0.7  # probabilidad de que "DANI diga"
+
+FRAME_INTERVAL = 10  # analizar 1 de cada X frames
 
 ANCHO_VENTANA = 1600
 ALTO_VENTANA = 900
 
 PROPORCION_VIDEO = 0.50
+
+EMOTIONS = ['happy', 'sad', 'angry', 'surprise', 'fear', 'disgust']
 
 EMOTION_SPRITES = {
     "happy": "alegria.png",
@@ -148,15 +154,82 @@ def actualizar_fondo(event):
     
     label.configure(width=ancho*PROPORCION_VIDEO, height=alto*PROPORCION_VIDEO)
     print(f"Label mide: {label.winfo_width()}x{label.winfo_height()}")
+
+def pantalla_inicio():
+    path = os.path.join(IMG_PATH, "fondo.png")
+    pantalla = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+    pantalla = cv2.resize(pantalla, (ANCHO_VENTANA, ALTO_VENTANA))  
     
+    reglas_base = [
+        "Reglas del juego:",
+        "- Si dice 'DANI dice', intenta mostrar esa emocion.",
+        "- Si NO dice 'DANI dice', no lo hagas",
+        "- Si fallas, vuelves al nivel 1.",
+        "- Si aciertas, subes de nivel.",
+        "- La camara debe captar tu rostro",
+        "",
+        "",
+        "Selecciona la dificultad y el juego comenzara:",
+        "1 - Facil (8s)    2 - Normal (3s)    3 - Dificil (1s)",
+        "",
+        "Pulsa 'ESC' para salir..."
+    ]
+
+    tiempo = 8  # por defecto
+
+    while True:
+
+        y = 120
+        
+        cv2.putText(pantalla, "Bienvenido a DANI Dice", (int(ANCHO_VENTANA/3)+50, y), cv2.FONT_HERSHEY_SIMPLEX,
+                    1, (0, 0, 0), 3)
+        
+        y += 50
+        
+        for regla in reglas_base:
+            cv2.putText(pantalla, regla, (int(ANCHO_VENTANA/3)+50, y), cv2.FONT_HERSHEY_SIMPLEX,
+                        0.6, (0, 0, 0), 2)
+            y += 35
+
+        cv2.imshow("DANI Dice", pantalla)
+        key = cv2.waitKey(1) & 0xFF
+
+        if key == ord('1'):            
+            tiempo = 8
+            cv2.destroyAllWindows()
+            return tiempo
+        elif key == ord('2'):            
+            tiempo = 3
+            cv2.destroyAllWindows()
+            return tiempo
+        elif key == ord('3'):            
+            tiempo = 1
+            cv2.destroyAllWindows()
+            return tiempo
+        elif key == 27:  # ESC
+            cv2.destroyAllWindows()
+            exit()
+
+def new_emotion(DS_THRESHOLD):
+    current_emotion = random.choice(EMOTIONS)
+    prob_simon_dice = random.random()
+    simon_dice = False
+    if(DS_THRESHOLD > prob_simon_dice):
+        simon_dice = True
+    
+    return current_emotion,simon_dice
+
+TIME_TO_RESPOND = pantalla_inicio()
      
+print(f"Tiempo para responder: {TIME_TO_RESPOND} segundos")
+
+
 # Configuración camara
 cap = cv2.VideoCapture(0)
 
-
 frame_count = 0 
 
-last_emotions = []  # almacena emociones recientes para mostrar
+last_emotions = []  # almacena emociones detectadas la ultima vez
 
 
 loaded_emojis = {}
@@ -169,7 +242,7 @@ for emotion, file in EMOTION_SPRITES.items():
 ### VENTANA TKINTER ###
 
 root = tk.Tk()
-root.title("DANIMO - DETECCIÓN DE EMOCIONES")
+root.title("DANI DICE - DETECCIÓN DE EMOCIONES")
 root.geometry(f"{ANCHO_VENTANA}x{ALTO_VENTANA}")
 
 # === Cargar imagen de fondo ===
