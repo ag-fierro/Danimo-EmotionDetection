@@ -1,5 +1,6 @@
 import os
 import random
+import json
 
 import time
 from time import sleep
@@ -11,52 +12,7 @@ import numpy as np
 import tkinter as tk
 from PIL import Image, ImageTk
 
-IMG_PATH = "src/img/"
-
-FD_THRESHOLD = 0.7  # umbral de confianza para detección facial
-DS_THRESHOLD = 0.7  # probabilidad de que "DANI diga"
-
-FRAME_INTERVAL = 7  # analizar 1 de cada X frames
-
-ANCHO_VENTANA = 1600
-ALTO_VENTANA = 900
-
-PROPORCION_VIDEO = 0.50
-
-SLEEP_TIME = 0.3  # tiempo de espera tras cada ronda
-
-EMOTIONS = ['Alegria', 'Tristeza', 'Enojo', 'Sorpresa', 'Miedo']
-
-EMOTIONS_TRANSLATED = {
-    'happy': 'Alegria',
-    'sad': 'Tristeza',
-    'angry': 'Enojo',
-    'surprise': 'Sorpresa',
-    'fear': 'Miedo',
-    'disgust': 'Discgusto',
-    'neutral': 'Neutral'
-}
-
-EMOTION_SPRITES = {
-    "happy": "alegria.png",
-    "sad": "tristeza.png",
-    "angry": "enojo.png",
-    "surprise": "sorpresa.png",
-    "neutral": "neutral.png",
-    "fear": "miedo.png",
-    "disgust": "disgusto.png"
-}
-
-WEIGHTS = {
-    'angry': 1.0,
-    'disgust': 1.8,
-    'fear': 1.0,
-    'happy': 1.0,
-    'sad': 1.0,
-    'surprise': 1.5,
-    'neutral': 1.3
-}
-
+from variables import *
 
 def overlay_image(bg, fg, x, y, scale=1.0):
     """
@@ -100,11 +56,13 @@ def analyze(weights, frame):
             last_emotions = []
             for res in results:
                     # Recalcular para evaluar ponderaciones                    
-                weighted_scores = {k: res["emotion"][k] * weights.get(k, 1.0) for k in res["emotion"]}
+                weighted_scores = {k: float(res["emotion"][k] * weights.get(k, 1.0)) for k in res["emotion"]}
                 dominant_emotion = max(weighted_scores, key=weighted_scores.get)
                 
-                    # Guardar emocion final
-                    
+
+                if LOGGING:
+                    print(f"Detectado: {json.dumps(weighted_scores, indent=2)} \n -> {dominant_emotion} \n ------- \n")
+
                 last_emotions.append((res['region'], dominant_emotion))
         else:
             last_emotions = []
@@ -138,8 +96,7 @@ def update_frame():
     if frame_count % FRAME_INTERVAL == 0:
         last_emotions = analyze(WEIGHTS, frame)
         
-        if last_emotions and len(last_emotions) > 0:
-            print(f"Emociones detectadas: {[e[1] for e in last_emotions]}")    
+        if last_emotions and len(last_emotions) > 0:  
             detected = EMOTIONS_TRANSLATED[last_emotions[0][1]] 
         
     orden = ""
@@ -157,8 +114,7 @@ def update_frame():
         if emotion in loaded_emojis:
             emoji = loaded_emojis[emotion]
             frame = overlay_image(frame, emoji, x, y, scale=w/emoji.shape[1])
-            cv2.putText(frame, emotion, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-            
+                        
     # Comprobar si debo cambiar emoción            
     change_emotion = time.time() - start_time > TIME_TO_RESPOND or detected == current_emotion
     
@@ -214,8 +170,7 @@ def actualizar_fondo(event):
     
     label.configure(width=ancho*PROPORCION_VIDEO, height=alto*PROPORCION_VIDEO)
     print(f"Label mide: {label.winfo_width()}x{label.winfo_height()}")
-    
-    label_text.configure(x=ancho/3, y=30)
+
 
 def pantalla_inicio():
     path = os.path.join(IMG_PATH, "fondo.png")
@@ -339,7 +294,7 @@ texto_res = f""
 label_res = tk.Label(
     label_fondo, 
     text=texto_res, 
-    font=("Arial", 16), 
+    font=("Arial", 24), 
     fg="black",       # color de la letra
     justify="center"  # centrar texto si tiene varias líneas
 )
