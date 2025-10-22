@@ -1,5 +1,9 @@
 import os
 import random
+
+import time
+from time import sleep
+
 import cv2
 from deepface import DeepFace
 import numpy as np
@@ -18,6 +22,8 @@ ANCHO_VENTANA = 1600
 ALTO_VENTANA = 900
 
 PROPORCION_VIDEO = 0.50
+
+SLEEP_TIME = 0.3  # tiempo de espera tras cada ronda
 
 EMOTIONS = ['happy', 'sad', 'angry', 'surprise', 'fear', 'disgust']
 
@@ -102,7 +108,7 @@ def analyze(weights, frame):
 
 def update_frame():
     
-    global frame_count,last_emotions
+    global frame_count,last_emotions,start_time,current_emotion,level,dani_dice,detected,level
     
     ret, frame = cap.read()
     if not ret:
@@ -115,10 +121,38 @@ def update_frame():
     frame = cv2.resize(frame, ( label.winfo_width(),label.winfo_height() ) )
     
     #### CODIGO INTERNO
-
+    
+    # Mostrar temporizador
+    time_left = int(TIME_TO_RESPOND - (time.time() - start_time))
+    if time_left >= 0:
+        cv2.putText(frame, f"Tiempo: {time_left}s", (400, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+    
+    
     # Analizar solo cada N frames
     if frame_count % FRAME_INTERVAL == 0:
         last_emotions = analyze(WEIGHTS, frame)
+        
+        if last_emotions and len(last_emotions) > 0:
+            print(f"Emociones detectadas: {[e[1] for e in last_emotions]}")    
+            detected = last_emotions[0][1] 
+        
+    # Mostrar gesto actual e interpretado
+    if (dani_dice):
+        cv2.putText(frame, f"Dani dice: {current_emotion.upper()}", (10, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+    else:
+        cv2.putText(frame, f"{current_emotion.upper()}", (10, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+    
+    if len(last_emotions)>0:
+        cv2.putText(frame, f"Actual: {detected.upper()}", (10, 70),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+        
+
+    cv2.putText(frame, f"Nivel: {level}", (10, 110),
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
+
 
     # Dibujar emociones en la pantalla
     for region, emotion in last_emotions:
@@ -127,6 +161,47 @@ def update_frame():
             emoji = loaded_emojis[emotion]
             frame = overlay_image(frame, emoji, x, y, scale=w/emoji.shape[1])
             cv2.putText(frame, emotion, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+            
+    # Comprobar si debo cambiar emoción            
+    change_emotion = time.time() - start_time > TIME_TO_RESPOND or detected == current_emotion
+    
+    if (dani_dice):
+        if time.time() - start_time > TIME_TO_RESPOND:
+            print(" ")
+            #add_output(" Tiempo agotado. Reiniciando juego.")
+            cv2.putText(frame, f"Tiempo agotado. Reiniciando juego.", (10, 110),
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
+            sleep(SLEEP_TIME)
+            level = 1
+            
+        elif detected == current_emotion:
+            print("Correcto!")
+            
+            cv2.putText(frame, f"Correcto!", (10, 110),
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
+            #add_output("Correcto!")
+            sleep(SLEEP_TIME)
+            level += 1
+    else:
+        if time.time() - start_time > TIME_TO_RESPOND:
+            print("Correcto!")
+            cv2.putText(frame, f"Correcto!", (10, 110),
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
+            sleep(SLEEP_TIME)
+            #add_output("Correcto!")
+            level += 1
+        elif detected == current_emotion:
+            print(" Simon No LO DIJO. Reiniciando juego.")
+            cv2.putText(frame, f"Simon No LO DIJO. Reiniciando juego.", (10, 110),
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
+            sleep(SLEEP_TIME)
+            #add_output(" Simon No LO DIJO. Reiniciando juego.")
+            level = 1
+            
+    if (change_emotion):
+        current_emotion, dani_dice = new_emotion(DS_THRESHOLD)
+
+        start_time = time.time() 
 
     # Mostrar en Tkinter
     cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -212,12 +287,12 @@ def pantalla_inicio():
 
 def new_emotion(DS_THRESHOLD):
     current_emotion = random.choice(EMOTIONS)
-    prob_simon_dice = random.random()
-    simon_dice = False
-    if(DS_THRESHOLD > prob_simon_dice):
-        simon_dice = True
+    prob_dani_dice = random.random()
+    dani_dice = False
+    if(DS_THRESHOLD > prob_dani_dice):
+        dani_dice = True
     
-    return current_emotion,simon_dice
+    return current_emotion,dani_dice
 
 TIME_TO_RESPOND = pantalla_inicio()
      
@@ -237,6 +312,11 @@ for emotion, file in EMOTION_SPRITES.items():
     path = os.path.join(IMG_PATH, file)
     if os.path.exists(path):
         loaded_emojis[emotion] = cv2.imread(path, cv2.IMREAD_UNCHANGED)  # con canal alpha
+        
+current_emotion, dani_dice = new_emotion(DS_THRESHOLD)
+detected = 'none'
+level = 1
+start_time = time.time()
 
 
 ### VENTANA TKINTER ###
