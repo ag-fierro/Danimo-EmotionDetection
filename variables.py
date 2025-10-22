@@ -12,7 +12,7 @@ ALTO_VENTANA = 900
 
 PROPORCION_VIDEO = 0.50
 
-SLEEP_TIME = 0.3  # tiempo de espera tras cada ronda
+SLEEP_TIME = 5  # tiempo de espera tras cada ronda
 
 EMOTIONS = ['Alegria', 'Tristeza', 'Enojo', 'Sorpresa', 'Miedo']
 
@@ -45,3 +45,18 @@ WEIGHTS = {
     'surprise': 2.0,
     'neutral': 1.2
 }
+
+REGLAS_TEXT = [
+        "Reglas del juego:",
+        "- Si dice 'DANI dice', intenta mostrar esa emocion.",
+        "- Si NO dice 'DANI dice', no lo hagas",
+        "- Si fallas, vuelves al nivel 1.",
+        "- Si aciertas, subes de nivel.",
+        "- La camara debe captar tu rostro",
+        "",
+        "",
+        "Selecciona la dificultad y el juego comenzara:",
+        "1 - Facil (8s)    2 - Normal (3s)    3 - Dificil (1s)",
+        "",
+        "Pulsa 'ESC' para salir..."
+    ]

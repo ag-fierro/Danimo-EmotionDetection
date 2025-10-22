@@ -136,7 +136,6 @@ def update_frame():
         elif detected == current_emotion:
             print(" Simon No LO DIJO. Reiniciando juego.")
             label_res.config(text=f"Simon No LO DIJO.\nReiniciando juego.\nNivel Alcanzado : {level}")
-            sleep(SLEEP_TIME)
             level = 1
             
     if (change_emotion):
@@ -171,27 +170,11 @@ def actualizar_fondo(event):
     label.configure(width=ancho*PROPORCION_VIDEO, height=alto*PROPORCION_VIDEO)
     print(f"Label mide: {label.winfo_width()}x{label.winfo_height()}")
 
-
 def pantalla_inicio():
     path = os.path.join(IMG_PATH, "fondo.png")
     pantalla = cv2.imread(path, cv2.IMREAD_UNCHANGED)
     pantalla = cv2.resize(pantalla, (ANCHO_VENTANA, ALTO_VENTANA))  
     
-    reglas_base = [
-        "Reglas del juego:",
-        "- Si dice 'DANI dice', intenta mostrar esa emocion.",
-        "- Si NO dice 'DANI dice', no lo hagas",
-        "- Si fallas, vuelves al nivel 1.",
-        "- Si aciertas, subes de nivel.",
-        "- La camara debe captar tu rostro",
-        "",
-        "",
-        "Selecciona la dificultad y el juego comenzara:",
-        "1 - Facil (8s)    2 - Normal (3s)    3 - Dificil (1s)",
-        "",
-        "Pulsa 'ESC' para salir..."
-    ]
-
     tiempo = 8  # por defecto
 
     while True:
@@ -203,7 +186,7 @@ def pantalla_inicio():
         
         y += 50
         
-        for regla in reglas_base:
+        for regla in REGLAS_TEXT:
             cv2.putText(pantalla, regla, (int(ANCHO_VENTANA/3)+50, y), cv2.FONT_HERSHEY_SIMPLEX,
                         0.6, (0, 0, 0), 2)
             y += 35
@@ -298,7 +281,7 @@ label_res = tk.Label(
     fg="black",       # color de la letra
     justify="center"  # centrar texto si tiene varias líneas
 )
-label_res.place(relx=0.9, rely=0.5, anchor="e")
+label_res.place(relx=1, rely=0.5, anchor="e")
 
 
 # === Frame que contendrá el stream de video (encima del fondo) ===
