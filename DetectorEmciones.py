@@ -7,12 +7,11 @@ from PIL import Image, ImageTk
 
 IMG_PATH = "src/img/"
 
-FD_THRESHOLD = 0.6  # umbral de confianza para detección facial
+FD_THRESHOLD = 0.7  # umbral de confianza para detección facial
+FRAME_INTERVAL = 7  # analizar 1 de cada X frames
 
-FRAME_INTERVAL = 5  # analizar 1 de cada 5 frames
-
-ANCHO_VENTANA = 800
-ALTO_VENTANA = 600
+ANCHO_VENTANA = 1600
+ALTO_VENTANA = 900
 
 PROPORCION_VIDEO = 0.50
 
