@@ -25,7 +25,17 @@ PROPORCION_VIDEO = 0.50
 
 SLEEP_TIME = 0.3  # tiempo de espera tras cada ronda
 
-EMOTIONS = ['happy', 'sad', 'angry', 'surprise', 'fear', 'disgust']
+EMOTIONS = ['Alegria', 'Tristeza', 'Enojo', 'Sorpresa', 'Miedo']
+
+EMOTIONS_TRANSLATED = {
+    'happy': 'Alegria',
+    'sad': 'Tristeza',
+    'angry': 'Enojo',
+    'surprise': 'Sorpresa',
+    'fear': 'Miedo',
+    'disgust': 'Discgusto',
+    'neutral': 'Neutral'
+}
 
 EMOTION_SPRITES = {
     "happy": "alegria.png",
@@ -34,17 +44,17 @@ EMOTION_SPRITES = {
     "surprise": "sorpresa.png",
     "neutral": "neutral.png",
     "fear": "miedo.png",
-    "disgust": "ansiedad.png"
+    "disgust": "disgusto.png"
 }
 
 WEIGHTS = {
     'angry': 1.0,
-    'disgust': 1.0,
+    'disgust': 1.8,
     'fear': 1.0,
     'happy': 1.0,
     'sad': 1.0,
-    'surprise': 1.0,
-    'neutral': 1.0  # potenciamos neutral
+    'surprise': 1.5,
+    'neutral': 1.3
 }
 
 
@@ -124,35 +134,23 @@ def update_frame():
     
     # Mostrar temporizador
     time_left = int(TIME_TO_RESPOND - (time.time() - start_time))
-    if time_left >= 0:
-        cv2.putText(frame, f"Tiempo: {time_left}s", (400, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
     
-    
-    # Analizar solo cada N frames
+        # Analizar solo cada N frames
     if frame_count % FRAME_INTERVAL == 0:
         last_emotions = analyze(WEIGHTS, frame)
         
         if last_emotions and len(last_emotions) > 0:
             print(f"Emociones detectadas: {[e[1] for e in last_emotions]}")    
-            detected = last_emotions[0][1] 
+            detected = EMOTIONS_TRANSLATED[last_emotions[0][1]] 
         
+    orden = ""
     # Mostrar gesto actual e interpretado
     if (dani_dice):
-        cv2.putText(frame, f"Dani dice: {current_emotion.upper()}", (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-    else:
-        cv2.putText(frame, f"{current_emotion.upper()}", (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+        orden += "Dani dice: " 
     
-    if len(last_emotions)>0:
-        cv2.putText(frame, f"Actual: {detected.upper()}", (10, 70),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-        
-
-    cv2.putText(frame, f"Nivel: {level}", (10, 110),
-                cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
-
+    orden += f"{current_emotion.upper()}"
+    
+    label_text.config(text=f"Tiempo restante: {time_left}s  Nivel: {level} \n {orden.upper()} \n Actual: {detected.upper()} ")
 
     # Dibujar emociones en la pantalla
     for region, emotion in last_emotions:
@@ -229,6 +227,8 @@ def actualizar_fondo(event):
     
     label.configure(width=ancho*PROPORCION_VIDEO, height=alto*PROPORCION_VIDEO)
     print(f"Label mide: {label.winfo_width()}x{label.winfo_height()}")
+    
+    label_text.configure(x=ancho/3, y=30)
 
 def pantalla_inicio():
     path = os.path.join(IMG_PATH, "fondo.png")
@@ -334,10 +334,24 @@ fondo_tk = ImageTk.PhotoImage(imagen_original)
 label_fondo = tk.Label(root)
 label_fondo.place(x=0, y=0, relwidth=1, relheight=1)
 
+
+texto = f"Tiempo restante: {TIME_TO_RESPOND}s  Nivel: {level} \n "" \n Emocion detectada: {current_emotion} "
+label_text = tk.Label(
+    label_fondo, 
+    text=texto, 
+    font=("Arial", 16), 
+    fg="black",       # color de la letra
+    justify="center"  # centrar texto si tiene varias líneas
+)
+label_text.place(relx=0.5, rely=0.08, anchor="n")  # parte superior centrado
+
+
+
 # === Frame que contendrá el stream de video (encima del fondo) ===
 frame_display = tk.Frame(root, bg="black")
 frame_display.pack(expand=True, fill='both')
 frame_display.place(relx=0.5, rely=0.43, anchor="center")  # centrado
+
 
 label = tk.Label(frame_display)
 label.pack()
